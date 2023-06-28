@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "baseUrl": ".",
+    "strict": true,
+    "paths": {
+      "@env": ["node_modules/react-native-dotenv"],
+      "@/*": ["./*"]
+    },
+    "noImplicitAny": false
+  },
+  "extends": "expo/tsconfig.base"
+}
