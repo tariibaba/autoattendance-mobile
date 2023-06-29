@@ -4,27 +4,37 @@ import axios from 'axios';
 import { API_URL } from '../../env';
 import { ViewState } from '../types';
 import { useAppState } from '../state';
-import { ActivityIndicator, Text } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Dialog,
+  FAB,
+  Paragraph,
+  Portal,
+  Text,
+  Button,
+} from 'react-native-paper';
 import { getFullName } from '../full-name';
+import { observer } from 'mobx-react-lite';
 
-export default function LecturerInfo({ route, navigation }) {
-  const { lecturerId } = route.params;
+export function CourseInfo({ route }) {
+  const { courseId } = route.params;
+  console.log(`courseId: ${courseId}`);
   const [viewState, setViewState] = useState<ViewState>('loading');
   const state = useAppState();
+  const session = state.userSession!;
+  const role = session.userRole;
 
-  console.log(`lecturerId ${lecturerId}`);
-  const lecturer = state?.lecturers[lecturerId];
+  const course = state?.courses[courseId];
 
   useEffect(() => {
-    // fetch lecturer info
     (async () => {
-      await state.fetchLecturerInfo(lecturerId);
+      await state.fetchCourseInfo(courseId);
       setViewState('success');
     })();
   }, []);
 
   return (
-    <View>
+    <View style={{ height: '100%' }}>
       {viewState === 'loading' ? (
         <ActivityIndicator animating={true} />
       ) : (
@@ -33,21 +43,18 @@ export default function LecturerInfo({ route, navigation }) {
             variant="headlineLarge"
             style={{ textAlign: 'center', padding: 32 }}
           >
-            {getFullName(lecturer)}
+            {course.code}
           </Text>
-          {lecturer?.courseIds?.length ? (
+
+          {course?.classIds?.length ? (
             <>
               <Text variant="titleMedium" style={{ textAlign: 'center' }}>
                 Courses
               </Text>
-              {lecturer?.courseIds?.map((courseId) => {
-                const course = state.courses[courseId];
+              {course?.classIds?.map((classId) => {
+                const courseClass = state.classes[classId];
                 return (
-                  <TouchableNativeFeedback
-                    onPress={() => {
-                      navigation.navigate('CourseInfo', { courseId });
-                    }}
-                  >
+                  <TouchableNativeFeedback>
                     <View
                       style={{
                         padding: 16,
@@ -56,8 +63,10 @@ export default function LecturerInfo({ route, navigation }) {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <Text>{course.code}</Text>
-                      <Text>{course.attendanceRate}%</Text>
+                      <Text>Class #{courseClass.id}</Text>
+                      <Text>
+                        <>{courseClass.date?.toString()}%</>
+                      </Text>
                     </View>
                   </TouchableNativeFeedback>
                 );
@@ -65,11 +74,24 @@ export default function LecturerInfo({ route, navigation }) {
             </>
           ) : (
             <Text variant="titleMedium" style={{ textAlign: 'center' }}>
-              No courses
+              No classes
             </Text>
           )}
         </View>
       )}
+      <FAB
+        label="New class"
+        icon="plus"
+        style={{ position: 'absolute', margin: 16, right: 0, bottom: 0 }}
+        onPress={async () => {
+          console.log('about to create class');
+          await state.createClass({ courseId });
+        }}
+      />
     </View>
   );
 }
+
+const CourseInfoWrapper = observer(CourseInfo);
+
+export default CourseInfoWrapper;

@@ -43,9 +43,9 @@ export type NewStudent = Omit<Student, 'id'>;
 
 export type CourseClass = {
   id: string;
-  courseId: string;
-  date: Date;
-  studentIds: string[];
+  courseId?: string;
+  date?: Date;
+  presentIds?: string[];
 };
 
 export type NewCourse = Omit<Course, 'id'>;

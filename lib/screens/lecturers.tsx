@@ -7,6 +7,8 @@ import { useAppState } from '../state';
 import { ViewState } from '../types';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LecturerInfo from './lecturer-info';
+import { Courses } from './courses';
+import CourseInfo from './course-info';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,15 +16,16 @@ export default function LecturerTab() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="Lecturers"
+        name="LecturerList"
         component={Lecturers}
-        options={{ headerShown: false }}
+        options={{ headerTitle: 'Lecturers' }}
       />
       <Stack.Screen
         name="LecturerInfo"
         component={LecturerInfo}
         options={{ headerTitle: 'Lecturer' }}
       />
+      <Stack.Screen name="CourseInfo" component={CourseInfo} options={{}} />
     </Stack.Navigator>
   );
 }
@@ -51,6 +54,7 @@ export function Lecturers({ route, navigation }) {
           ));
           return (
             <TouchableNativeFeedback
+              key={lecturer.id}
               onPress={() => {
                 navigation.navigate('LecturerInfo', {
                   lecturerId: lecturer.id,
@@ -58,7 +62,6 @@ export function Lecturers({ route, navigation }) {
               }}
             >
               <View
-                key={lecturer.id}
                 style={{
                   padding: 16,
                   display: 'flex',

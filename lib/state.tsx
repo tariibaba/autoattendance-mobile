@@ -28,6 +28,10 @@ export class AppState {
     return this.lecturerIds.map((id) => this.lecturers[id]);
   }
 
+  get courseList() {
+    return this.courseIds.map((id) => this.courses[id]);
+  }
+
   constructor() {
     makeAutoObservable(this);
   }
@@ -48,13 +52,15 @@ export class AppState {
 
   async fetchCourses() {
     const coursesUrl = `${API_URL}/courses`;
-    const coursesRes = await axios.get(coursesUrl, {
-      headers: { Authorization: `Bearer ${this.userSession!.token}` },
-    });
+    const courses = (
+      await axios.get(coursesUrl, {
+        headers: { Authorization: `Bearer ${this.userSession!.token}` },
+      })
+    ).data;
     runInAction(() => {
       this.courseIds = [];
       this.courses = {};
-      for (let course of coursesRes.data) {
+      for (let course of courses) {
         this.courseIds.push(course.id);
         this.courses[course.id] = { ...course };
       }
@@ -110,29 +116,34 @@ export class AppState {
 
   async fetchCourseInfo(courseId): Promise<void> {
     const url = `${API_URL}/courses/${courseId}`;
-    const res = await axios.get(url, {
-      headers: { Authorization: `Bearer ${this.userSession!.token}` },
-    });
-    const data = res.data;
-    const course = this.courses[data.id];
+    const data = (
+      await axios.get(url, {
+        headers: { Authorization: `Bearer ${this.userSession!.token}` },
+      })
+    ).data;
+    this.courses = { ...this.courses, ...data };
+    console.log('data...');
+    console.log(JSON.stringify(data, null, 2));
+    console.log(`courseId: ${courseId}`);
+    console.log(this.courses);
+    const course = this.courses[courseId] ?? data;
+    console.log(course);
+
     course.classIds = [];
     course.studentIds = [];
 
-    let classesRes;
+    let classes;
     if (data.classIds.length > 0) {
-      classesRes = await axios.get(
-        `${API_URL}/classes?ids=[${data.classIds}]`,
-        {
+      classes = (
+        await axios.get(`${API_URL}/classes?courseId=${courseId}`, {
           headers: { Authorization: `Bearer ${this.userSession!.token}` },
-        }
-      );
+        })
+      ).data;
     }
 
     let studentsRes;
     if (data.studentIds.length > 0) {
-      const studentUrl = `${API_URL}/students?ids=[${data.studentIds.join(
-        ','
-      )}]`;
+      const studentUrl = `${API_URL}/students?courseId=${courseId}`;
       studentsRes = await axios.get(studentUrl, {
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
       });
@@ -149,7 +160,7 @@ export class AppState {
 
     runInAction(() => {
       if (data.classIds.length > 0) {
-        for (let courseClass of classesRes.data) {
+        for (let courseClass of classes) {
           if (!this.classIds.includes(courseClass.id)) {
             this.classIds.push(courseClass.id);
           }
@@ -158,7 +169,7 @@ export class AppState {
             id: courseClass.id,
             courseId,
             date: new Date(courseClass.date),
-            studentIds: courseClass.studentIds,
+            presentIds: courseClass.studentIds,
           };
         }
       }
@@ -333,28 +344,36 @@ export class AppState {
     });
   }
 
-  async createClass(courseId: string): Promise<CourseClass | undefined> {
-    const url = `${API_URL}/createClass`;
-    const res = await axios.post(
-      url,
-      { courseId },
-      { headers: { Authorization: `Bearer ${this.userSession!.token}` } }
-    );
-    const data = res?.data;
-    if (data?.success) {
-      const courseClass: CourseClass = {
-        courseId,
-        date: new Date(data.class.date),
-        id: data.class.id,
-        studentIds: data.class.studentIds,
-      };
-      runInAction(() => {
-        this.classIds.push(data.class.id);
-        this.courses[courseId]!.classIds!.push(data.class.id);
-        this.classes[data.class.id] = courseClass;
-      });
-      return courseClass;
-    }
+  async createClass(params: {
+    courseId: string;
+  }): Promise<CourseClass | undefined> {
+    const { courseId } = params;
+    console.log('am here');
+    const token = this.userSession!.token;
+    const date = new Date();
+    const { id } = (
+      await axios.post(
+        `${API_URL}/classes`,
+        {
+          courseId,
+          date: date.toISOString().slice(0, 19).replace('T', ' '),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+    ).data;
+    console.log(`id: ${id}`);
+    const courseClass: CourseClass = {
+      courseId,
+      id,
+      date,
+      presentIds: [],
+    };
+    runInAction(() => {
+      this.classIds.push(id);
+      this.courses[courseId]!.classIds!.push(id);
+      this.classes[id] = courseClass;
+    });
+    return courseClass;
   }
 
   async markPresent(attendance: { classId: string; studentId: string }) {
@@ -368,7 +387,7 @@ export class AppState {
     const data = res?.data;
     if (data?.success) {
       runInAction(() => {
-        this.classes[classId].studentIds.push(studentId);
+        this.classes[classId].presentIds!.push(studentId);
       });
     }
   }
@@ -385,7 +404,7 @@ export class AppState {
     if (data?.success) {
       runInAction(() => {
         const courseClass = this.classes[classId];
-        courseClass.studentIds = courseClass.studentIds.filter(
+        courseClass.presentIds = courseClass.presentIds!.filter(
           (id) => id !== studentId
         );
       });

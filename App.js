@@ -9,12 +9,13 @@ import { AppState, useAppState } from './lib/state';
 import React from 'react';
 import { AppStateProvider } from './lib/state';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import Lecturers from './lib/screens/lecturers';
 
 const Stack = createNativeStackNavigator();
 
-const Tab = createMaterialTopTabNavigator();
+const Tab = createMaterialBottomTabNavigator();
 
 function Home() {
   return (
@@ -45,7 +46,7 @@ function App() {
   useEffect(() => {
     (async () => {
       await state.readUserSession();
-      setRoute(state.userSession?.token ? 'Home' : 'UserRole');
+      setRoute(state.userSession?.token ? 'Home' : 'SignIn');
     })();
   }, []);
 
