@@ -19,6 +19,7 @@ export type Lecturer = {
   lastName?: string;
   otherNames?: string;
   courses?: Course[];
+  courseIds?: string[];
 };
 
 export type Course = {
@@ -28,6 +29,7 @@ export type Course = {
   lecturerId?: string;
   classIds?: string[];
   studentIds?: string[];
+  attendanceRate?: number;
 };
 
 export type Admin = {

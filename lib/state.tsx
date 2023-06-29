@@ -61,6 +61,53 @@ export class AppState {
     });
   }
 
+  async fetchLecturerInfo(lecturerId: string): Promise<void> {
+    const url = `${API_URL}/lecturers/${lecturerId}`;
+    const res = await axios.get(url, {
+      headers: { Authorization: `Bearer ${this.userSession!.token}` },
+    });
+    const data = res.data;
+    runInAction(() => {
+      this.lecturers[lecturerId] = {
+        id: lecturerId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        otherNames: data.otherNames,
+        role: data.role,
+      };
+    });
+    const lecturer = this.lecturers[lecturerId];
+    console.log(`courseIds: ${data.courseIds}`);
+    const coursesUrl = `${API_URL}/courses/?ids=${data.courseIds.join(',')}`;
+    const courses =
+      data.courseIds.length > 0
+        ? (
+            await axios.get(coursesUrl, {
+              params: { id: data.courseIds },
+              headers: { Authorization: `Bearer ${this.userSession!.token}` },
+            })
+          ).data
+        : [];
+    console.log('courses...');
+    console.log(courses);
+    runInAction(() => {
+      lecturer.courseIds = [];
+      if (data.courseIds.length > 0) {
+        for (let course of courses) {
+          lecturer.courseIds.push(course.id);
+          const { id, title, code, attendanceRate } = course;
+          this.courses[course.id] = {
+            ...this.courses[course.id],
+            id,
+            title,
+            code,
+            attendanceRate,
+          };
+        }
+      }
+    });
+  }
+
   async fetchCourseInfo(courseId): Promise<void> {
     const url = `${API_URL}/courses/${courseId}`;
     const res = await axios.get(url, {
@@ -70,30 +117,36 @@ export class AppState {
     const course = this.courses[data.id];
     course.classIds = [];
     course.studentIds = [];
-    const classUrl = `${API_URL}/classes`;
+
     let classesRes;
     if (data.classIds.length > 0) {
-      classesRes = await axios.get(classUrl, {
-        params: { id: data.classIds },
-        headers: { Authorization: `Bearer ${this.userSession!.token}` },
-      });
+      classesRes = await axios.get(
+        `${API_URL}/classes?ids=[${data.classIds}]`,
+        {
+          headers: { Authorization: `Bearer ${this.userSession!.token}` },
+        }
+      );
     }
+
     let studentsRes;
     if (data.studentIds.length > 0) {
-      const studentUrl = `${API_URL}/students/`;
+      const studentUrl = `${API_URL}/students?ids=[${data.studentIds.join(
+        ','
+      )}]`;
       studentsRes = await axios.get(studentUrl, {
-        params: { id: data.studentIds },
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
       });
     }
+
     let lecturer;
     if (data.lecturerId) {
-      const lecturerUrl = `${API_URL}/lecturers/${data.lecturerId}`;
-      const lecturerRes = await axios.get(lecturerUrl, {
-        headers: { Authorization: `Bearer ${this.userSession!.token}` },
-      });
-      lecturer = lecturerRes.data;
+      lecturer = (
+        await axios.get(`${API_URL}/lecturers/${data.lecturerId}`, {
+          headers: { Authorization: `Bearer ${this.userSession!.token}` },
+        })
+      ).data;
     }
+
     runInAction(() => {
       if (data.classIds.length > 0) {
         for (let courseClass of classesRes.data) {
