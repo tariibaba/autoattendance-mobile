@@ -16,9 +16,8 @@ import {
 import { getFullName } from '../full-name';
 import { observer } from 'mobx-react-lite';
 
-export function CourseInfo({ route }) {
+export function CourseInfo({ route, navigation }) {
   const { courseId } = route.params;
-  console.log(`courseId: ${courseId}`);
   const [viewState, setViewState] = useState<ViewState>('loading');
   const state = useAppState();
   const session = state.userSession!;
@@ -54,7 +53,13 @@ export function CourseInfo({ route }) {
               {course?.classIds?.map((classId) => {
                 const courseClass = state.classes[classId];
                 return (
-                  <TouchableNativeFeedback>
+                  <TouchableNativeFeedback
+                    onPress={() => {
+                      navigation.navigate('ClassInfo', {
+                        classId: courseClass.id,
+                      });
+                    }}
+                  >
                     <View
                       style={{
                         padding: 16,
@@ -84,7 +89,6 @@ export function CourseInfo({ route }) {
         icon="plus"
         style={{ position: 'absolute', margin: 16, right: 0, bottom: 0 }}
         onPress={async () => {
-          console.log('about to create class');
           await state.createClass({ courseId });
         }}
       />

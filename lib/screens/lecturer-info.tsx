@@ -45,7 +45,10 @@ export default function LecturerInfo({ route, navigation }) {
                 return (
                   <TouchableNativeFeedback
                     onPress={() => {
-                      navigation.navigate('CourseInfo', { courseId });
+                      navigation.navigate('Courses', {
+                        screen: 'CourseInfo',
+                        params: { courseId },
+                      });
                     }}
                   >
                     <View

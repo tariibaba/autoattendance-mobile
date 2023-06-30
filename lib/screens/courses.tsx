@@ -7,8 +7,19 @@ import { useAppState } from '../state';
 import { ViewState } from '../types';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import CourseInfo from './course-info';
+import ClassInfo from './class-info';
+import BarcodeScan from './barcode-scan';
 
 const Stack = createNativeStackNavigator();
+
+export type CoursesTabParamList = {
+  Courses: undefined;
+  CourseInfo: { courseId: string };
+  CreateCourse: { courseId?: string; mode: 'create' | 'update' };
+  ClassInfo: { classId: string; classIndex: number };
+  BarcodeScan: { classId: string };
+  PercentageReport: { courseId: string };
+};
 
 export default function CourseTab() {
   return (
@@ -18,11 +29,17 @@ export default function CourseTab() {
         component={Courses}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="CourseInfo" component={CourseInfo} />
       <Stack.Screen
-        name="CourseInfo"
-        component={CourseInfo}
-        options={{ headerTitle: 'Course' }}
+        name="ClassInfo"
+        component={ClassInfo}
+        options={{
+          headerTitle: 'Class',
+          headerBackVisible: true,
+          headerShadowVisible: false,
+        }}
       />
+      <Stack.Screen name="BarcodeScan" component={BarcodeScan} />
     </Stack.Navigator>
   );
 }

@@ -83,7 +83,6 @@ export class AppState {
       };
     });
     const lecturer = this.lecturers[lecturerId];
-    console.log(`courseIds: ${data.courseIds}`);
     const coursesUrl = `${API_URL}/courses/?ids=${data.courseIds.join(',')}`;
     const courses =
       data.courseIds.length > 0
@@ -94,8 +93,6 @@ export class AppState {
             })
           ).data
         : [];
-    console.log('courses...');
-    console.log(courses);
     runInAction(() => {
       lecturer.courseIds = [];
       if (data.courseIds.length > 0) {
@@ -122,12 +119,7 @@ export class AppState {
       })
     ).data;
     this.courses = { ...this.courses, ...data };
-    console.log('data...');
-    console.log(JSON.stringify(data, null, 2));
-    console.log(`courseId: ${courseId}`);
-    console.log(this.courses);
     const course = this.courses[courseId] ?? data;
-    console.log(course);
 
     course.classIds = [];
     course.studentIds = [];
@@ -143,6 +135,7 @@ export class AppState {
 
     let studentsRes;
     if (data.studentIds.length > 0) {
+      console.log(`studentIds: ${data.studentIds}`);
       const studentUrl = `${API_URL}/students?courseId=${courseId}`;
       studentsRes = await axios.get(studentUrl, {
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
@@ -169,7 +162,7 @@ export class AppState {
             id: courseClass.id,
             courseId,
             date: new Date(courseClass.date),
-            presentIds: courseClass.studentIds,
+            presentIds: [],
           };
         }
       }
@@ -348,7 +341,6 @@ export class AppState {
     courseId: string;
   }): Promise<CourseClass | undefined> {
     const { courseId } = params;
-    console.log('am here');
     const token = this.userSession!.token;
     const date = new Date();
     const { id } = (
@@ -361,7 +353,6 @@ export class AppState {
         { headers: { Authorization: `Bearer ${token}` } }
       )
     ).data;
-    console.log(`id: ${id}`);
     const courseClass: CourseClass = {
       courseId,
       id,
@@ -378,37 +369,29 @@ export class AppState {
 
   async markPresent(attendance: { classId: string; studentId: string }) {
     const { classId, studentId } = attendance;
-    const url = `${API_URL}/markPresent`;
-    const res = await axios.post(
+    const url = `${API_URL}/classes/${classId}/attendances`;
+    await axios.post(
       url,
-      { ...attendance },
+      { studentId },
       { headers: { Authorization: `Bearer ${this.userSession!.token}` } }
     );
-    const data = res?.data;
-    if (data?.success) {
-      runInAction(() => {
-        this.classes[classId].presentIds!.push(studentId);
-      });
-    }
+    runInAction(() => {
+      this.classes[classId].presentIds!.push(studentId);
+    });
   }
 
   async markAbsent(attendance: { classId: string; studentId: string }) {
     const { classId, studentId } = attendance;
-    const url = `${API_URL}/markAbsent`;
-    const res = await axios.post(
-      url,
-      { ...attendance },
-      { headers: { Authorization: `Bearer ${this.userSession!.token}` } }
-    );
-    const data = res?.data;
-    if (data?.success) {
-      runInAction(() => {
-        const courseClass = this.classes[classId];
-        courseClass.presentIds = courseClass.presentIds!.filter(
-          (id) => id !== studentId
-        );
-      });
-    }
+    const url = `${API_URL}/classes/${classId}/attendances/${studentId}`;
+    await axios.delete(url, {
+      headers: { Authorization: `Bearer ${this.userSession!.token}` },
+    });
+    runInAction(() => {
+      const courseClass = this.classes[classId];
+      courseClass.presentIds = courseClass.presentIds!.filter(
+        (id) => id !== studentId
+      );
+    });
   }
 
   async fetchLecturers() {

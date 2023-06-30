@@ -25,7 +25,6 @@ export default function LecturerTab() {
         component={LecturerInfo}
         options={{ headerTitle: 'Lecturer' }}
       />
-      <Stack.Screen name="CourseInfo" component={CourseInfo} options={{}} />
     </Stack.Navigator>
   );
 }
