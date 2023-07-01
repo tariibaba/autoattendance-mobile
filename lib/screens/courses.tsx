@@ -6,9 +6,11 @@ import { getFullName } from '../full-name';
 import { useAppState } from '../state';
 import { ViewState } from '../types';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import CourseInfo from './course-info';
+import CourseClasses from './course-classes';
 import ClassInfo from './class-info';
 import BarcodeScan from './barcode-scan';
+import { CourseInfo } from './course-info';
+import { CourseStudents } from './course-students';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,14 +24,37 @@ export type CoursesTabParamList = {
 };
 
 export default function CourseTab() {
+  const state = useAppState();
+
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="CourseList"
         component={Courses}
-        options={{ headerShown: false }}
+        options={{ headerTitle: 'Courses' }}
       />
-      <Stack.Screen name="CourseInfo" component={CourseInfo} />
+
+      <Stack.Screen
+        name="CourseInfo"
+        component={CourseInfo}
+        options={({ route }) => ({
+          title: state.courses[(route.params as any)!.courseId].code,
+        })}
+      />
+      <Stack.Screen
+        name="CourseClasses"
+        component={CourseClasses}
+        options={({ route }) => ({
+          title: state.courses[(route.params as any)!.courseId].code,
+        })}
+      />
+      <Stack.Screen
+        name="CourseStudents"
+        component={CourseStudents}
+        options={({ route }) => ({
+          title: state.courses[(route.params as any)!.courseId].code,
+        })}
+      />
       <Stack.Screen
         name="ClassInfo"
         component={ClassInfo}
@@ -84,7 +109,7 @@ export function Courses({ route, navigation }) {
                 <Text>
                   {course.title} ({course.code})
                 </Text>
-                <Text>{course.attendanceRate}%</Text>
+                <Text>{(course.attendanceRate! * 100).toFixed(0)}%</Text>
               </View>
             </TouchableNativeFeedback>
           );

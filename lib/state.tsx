@@ -118,8 +118,12 @@ export class AppState {
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
       })
     ).data;
-    this.courses = { ...this.courses, ...data };
+    console.log(`fetched course info for ${courseId}`);
+    console.log(JSON.stringify(data, null, 2));
+    this.courses = { ...this.courses, ...{ [data.id]: data } };
     const course = this.courses[courseId] ?? data;
+    console.log(`course is now...`);
+    console.log(JSON.stringify(course, null, 2));
 
     course.classIds = [];
     course.studentIds = [];

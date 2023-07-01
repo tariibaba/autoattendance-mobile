@@ -30,6 +30,7 @@ export type Course = {
   classIds?: string[];
   studentIds?: string[];
   attendanceRate?: number;
+  attendanceRateByStudent?: { studentId: string; attendanceRate: number }[];
 };
 
 export type Admin = {

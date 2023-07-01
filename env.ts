@@ -1,4 +1,4 @@
-const isEmulator = true;
+const isEmulator = false;
 
 export const API_URL = isEmulator
   ? 'http://10.0.2.2:3000/api'

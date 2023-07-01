@@ -1,53 +1,42 @@
 import { useEffect, useState } from 'react';
 import { TouchableNativeFeedback, View } from 'react-native';
-import axios from 'axios';
-import { API_URL } from '../../env';
 import { ViewState } from '../types';
 import { useAppState } from '../state';
-import { ActivityIndicator, Text } from 'react-native-paper';
-import { getFullName } from '../full-name';
+import { ActivityIndicator, FAB, Text } from 'react-native-paper';
+import { observer } from 'mobx-react-lite';
+import format from 'date-fns/format';
 
-export default function LecturerInfo({ route, navigation }) {
-  const { lecturerId } = route.params;
+export function CourseClasses({ route, navigation }) {
+  const { courseId } = route.params;
   const [viewState, setViewState] = useState<ViewState>('loading');
   const state = useAppState();
+  const session = state.userSession!;
+  const role = session.userRole;
 
-  console.log(`lecturerId ${lecturerId}`);
-  const lecturer = state?.lecturers[lecturerId];
+  const course = state?.courses[courseId];
 
   useEffect(() => {
-    // fetch lecturer info
     (async () => {
-      await state.fetchLecturerInfo(lecturerId);
+      await state.fetchCourseInfo(courseId);
       setViewState('success');
     })();
   }, []);
 
   return (
-    <View>
+    <View style={{ height: '100%' }}>
       {viewState === 'loading' ? (
         <ActivityIndicator animating={true} />
       ) : (
         <View>
-          <Text
-            variant="headlineLarge"
-            style={{ textAlign: 'center', padding: 32 }}
-          >
-            {getFullName(lecturer)}
-          </Text>
-          {lecturer?.courseIds?.length ? (
+          {course?.classIds?.length ? (
             <>
-              <Text variant="titleMedium" style={{ textAlign: 'center' }}>
-                Courses
-              </Text>
-              {lecturer?.courseIds?.map((courseId) => {
-                const course = state.courses[courseId];
+              {course?.classIds?.map((classId) => {
+                const courseClass = state.classes[classId];
                 return (
                   <TouchableNativeFeedback
                     onPress={() => {
-                      navigation.navigate('Courses', {
-                        screen: 'CourseInfo',
-                        params: { courseId },
+                      navigation.navigate('ClassInfo', {
+                        classId: courseClass.id,
                       });
                     }}
                   >
@@ -59,8 +48,10 @@ export default function LecturerInfo({ route, navigation }) {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <Text>{course.code}</Text>
-                      <Text>{(course.attendanceRate! * 100).toFixed(0)}%</Text>
+                      <Text>
+                        Class on&nbsp;
+                        {format(courseClass.date!, 'MMM dd yyyy  h:mm a')}
+                      </Text>
                     </View>
                   </TouchableNativeFeedback>
                 );
@@ -68,11 +59,23 @@ export default function LecturerInfo({ route, navigation }) {
             </>
           ) : (
             <Text variant="titleMedium" style={{ textAlign: 'center' }}>
-              No courses
+              No classes
             </Text>
           )}
         </View>
       )}
+      <FAB
+        label="New class"
+        icon="plus"
+        style={{ position: 'absolute', margin: 16, right: 0, bottom: 0 }}
+        onPress={async () => {
+          await state.createClass({ courseId });
+        }}
+      />
     </View>
   );
 }
+
+const CourseInfoWrapper = observer(CourseClasses);
+
+export default CourseInfoWrapper;

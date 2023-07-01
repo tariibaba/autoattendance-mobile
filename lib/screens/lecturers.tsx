@@ -8,7 +8,7 @@ import { ViewState } from '../types';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LecturerInfo from './lecturer-info';
 import { Courses } from './courses';
-import CourseInfo from './course-info';
+import CourseInfo from './course-classes';
 
 const Stack = createNativeStackNavigator();
 
