@@ -1,7 +1,12 @@
 import axios from 'axios';
 import { makeAutoObservable, runInAction } from 'mobx';
 import { API_URL } from '../env';
-import { readUserSession, createUserSession, UserSession } from './auth';
+import {
+  readUserSession,
+  createUserSession,
+  UserSession,
+  deleteUserSession,
+} from './auth';
 import {
   Course,
   CourseClass,
@@ -32,11 +37,24 @@ export class AppState {
     return this.courseIds.map((id) => this.courses[id]);
   }
 
+  get studentList() {
+    return this.studentIds.map((id) => this.students[id]);
+  }
+
   constructor() {
     makeAutoObservable(this);
   }
 
+  async signOut() {
+    deleteUserSession();
+    runInAction(() => {
+      this.userSession = undefined;
+    });
+  }
+
   async createUserSession(session: UserSession) {
+    console.log('creating session...');
+    console.log(JSON.stringify(session, null, 2));
     await createUserSession(session);
     runInAction(() => {
       this.userSession = session;
@@ -111,22 +129,21 @@ export class AppState {
     });
   }
 
-  async fetchCourseInfo(courseId): Promise<void> {
+  async fetchCourseInfo(courseId: string): Promise<void> {
     const url = `${API_URL}/courses/${courseId}`;
     const data = (
       await axios.get(url, {
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
       })
     ).data;
-    console.log(`fetched course info for ${courseId}`);
-    console.log(JSON.stringify(data, null, 2));
-    this.courses = { ...this.courses, ...{ [data.id]: data } };
-    const course = this.courses[courseId] ?? data;
-    console.log(`course is now...`);
-    console.log(JSON.stringify(course, null, 2));
 
-    course.classIds = [];
-    course.studentIds = [];
+    let course: any;
+    runInAction(() => {
+      this.courses = { ...this.courses, ...{ [data.id]: data } };
+      course = this.courses[courseId] ?? data;
+      course.classIds = [];
+      course.studentIds = [];
+    });
 
     let classes;
     if (data.classIds.length > 0) {
@@ -234,13 +251,17 @@ export class AppState {
 
   async fetchStudents() {
     const url = `${API_URL}/students`;
-    const res = await axios.get(url, {
-      headers: { Authorization: `Bearer ${this.userSession!.token}` },
-    });
+    const students = (
+      await axios.get(url, {
+        headers: { Authorization: `Bearer ${this.userSession!.token}` },
+      })
+    ).data;
+    console.log('students...');
+    console.log(JSON.stringify(students));
     runInAction(() => {
       this.studentIds = [];
       this.students = {};
-      for (let student of res.data) {
+      for (const student of students) {
         this.studentIds.push(student.id);
         this.students[student.id] = student;
       }
@@ -298,34 +319,44 @@ export class AppState {
 
   async fetchStudentInfo(studentId: string): Promise<void> {
     const url = `${API_URL}/students/${studentId}`;
-    const res = await axios.get(url, {
-      headers: { Authorization: `Bearer ${this.userSession!.token}` },
-    });
-    const data = res.data;
+    const data = (
+      await axios.get(url, {
+        headers: { Authorization: `Bearer ${this.userSession!.token}` },
+      })
+    ).data;
+    const {
+      firstName,
+      lastName,
+      otherNames,
+      matricNo,
+      courseIds,
+      level,
+      attendanceRate,
+    } = data;
     runInAction(() => {
       this.students[studentId] = {
         id: studentId,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        otherNames: data.otherNames,
-        matricNo: data.matricNo,
-        courseIds: [],
-        level: data.level,
+        firstName,
+        lastName,
+        otherNames,
+        matricNo,
+        courseIds,
+        level,
+        attendanceRate,
       };
     });
     const student = this.students[studentId];
-    const coursesUrl = `${API_URL}/courses`;
-    let coursesRes;
-    if (data.courseIds.length > 0) {
-      coursesRes = await axios.get(coursesUrl, {
-        params: { id: data.courseIds },
-        headers: { Authorization: `Bearer ${this.userSession!.token}` },
-      });
-    }
-    runInAction(() => {
-      student.courseIds = [];
-      if (data.courseIds.length > 0) {
-        for (let course of coursesRes.data) {
+    const coursesUrl = `${API_URL}/courses/?ids=${data.courseIds.join(',')}`;
+    let courseData;
+    if (courseIds.length > 0) {
+      courseData = (
+        await axios.get(coursesUrl, {
+          headers: { Authorization: `Bearer ${this.userSession!.token}` },
+        })
+      ).data;
+      runInAction(() => {
+        student.courseIds = [];
+        for (let course of courseData) {
           if (!this.courseIds.includes(course.id)) {
             this.courseIds.push(course.id);
           }
@@ -337,8 +368,8 @@ export class AppState {
             code: course.code,
           };
         }
-      }
-    });
+      });
+    }
   }
 
   async createClass(params: {
@@ -411,6 +442,8 @@ export class AppState {
         this.lecturers[lecturer.id] = { ...lecturer };
       }
     });
+
+    console.log(`lecturerList: ${JSON.stringify(this.lecturerList, null, 2)}`);
   }
 
   get isAdmin(): boolean {

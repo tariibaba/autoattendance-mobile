@@ -1,25 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TouchableNativeFeedback, View } from 'react-native';
 import { ViewState } from '../types';
 import { useAppState } from '../state';
 import { ActivityIndicator, Button, FAB, Text } from 'react-native-paper';
 import { observer } from 'mobx-react-lite';
 import { getFullName } from '../full-name';
+import { useFocusEffect } from '@react-navigation/native';
 
 export function CourseStudents({ route, navigation }) {
   const { courseId } = route.params;
   const [viewState, setViewState] = useState<ViewState>('loading');
   const state = useAppState();
   const session = state.userSession!;
+  const userRole = session.userRole;
 
   const course = state?.courses[courseId];
 
-  useEffect(() => {
-    (async () => {
-      await state.fetchCourseInfo(courseId);
-      setViewState('success');
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        await state.fetchCourseInfo(courseId);
+        setViewState('success');
+      })();
+    }, [])
+  );
 
   return (
     <View style={{ height: '100%' }}>
@@ -29,18 +33,8 @@ export function CourseStudents({ route, navigation }) {
         </View>
       ) : (
         <View style={{ display: 'flex', flex: 1 }}>
-          <Text
-            variant="headlineLarge"
-            style={{ textAlign: 'center', padding: 32 }}
-          >
-            {course.code}
-          </Text>
-
           {course?.studentIds?.length ? (
             <>
-              <Text variant="titleMedium" style={{ textAlign: 'center' }}>
-                Courses
-              </Text>
               {course?.studentIds?.map((studentId) => {
                 const student = state.students[studentId];
                 console.log('attendance rate by student...');
@@ -76,15 +70,17 @@ export function CourseStudents({ route, navigation }) {
               })}
             </>
           ) : (
-            <Text variant="titleMedium" style={{ textAlign: 'center' }}>
-              No students
-            </Text>
+            <Text style={{ margin: 16, textAlign: 'center' }}>No students</Text>
           )}
         </View>
       )}
-      <Button style={{ margin: 32, marginBottom: 16 }} mode="contained">
-        Scan for exam eligibility
-      </Button>
+      {userRole === 'lecturer' ? (
+        <Button style={{ margin: 32, marginBottom: 16 }} mode="contained">
+          Scan for exam eligibility
+        </Button>
+      ) : (
+        <></>
+      )}
     </View>
   );
 }

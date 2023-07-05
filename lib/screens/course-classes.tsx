@@ -1,26 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TouchableNativeFeedback, View } from 'react-native';
 import { ViewState } from '../types';
 import { useAppState } from '../state';
 import { ActivityIndicator, FAB, Text } from 'react-native-paper';
 import { observer } from 'mobx-react-lite';
 import format from 'date-fns/format';
+import { useFocusEffect } from '@react-navigation/native';
 
 export function CourseClasses({ route, navigation }) {
   const { courseId } = route.params;
   const [viewState, setViewState] = useState<ViewState>('loading');
   const state = useAppState();
-  const session = state.userSession!;
-  const role = session.userRole;
+  const session = state.userSession;
+  const role = session?.userRole;
 
   const course = state?.courses[courseId];
 
-  useEffect(() => {
-    (async () => {
-      await state.fetchCourseInfo(courseId);
-      setViewState('success');
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        await state.fetchCourseInfo(courseId);
+        setViewState('success');
+      })();
+    }, [])
+  );
 
   return (
     <View style={{ height: '100%' }}>
@@ -58,20 +61,22 @@ export function CourseClasses({ route, navigation }) {
               })}
             </>
           ) : (
-            <Text variant="titleMedium" style={{ textAlign: 'center' }}>
-              No classes
-            </Text>
+            <Text style={{ margin: 16, textAlign: 'center' }}>No classes</Text>
           )}
         </View>
       )}
-      <FAB
-        label="New class"
-        icon="plus"
-        style={{ position: 'absolute', margin: 16, right: 0, bottom: 0 }}
-        onPress={async () => {
-          await state.createClass({ courseId });
-        }}
-      />
+      {role === 'lecturer' ? (
+        <FAB
+          label="New class"
+          icon="plus"
+          style={{ position: 'absolute', margin: 16, right: 0, bottom: 0 }}
+          onPress={async () => {
+            await state.createClass({ courseId });
+          }}
+        />
+      ) : (
+        <></>
+      )}
     </View>
   );
 }

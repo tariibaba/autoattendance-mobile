@@ -1,10 +1,116 @@
-import { View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Fragment, useEffect, useState } from 'react';
+import {
+  ScrollView,
+  StatusBar,
+  TouchableNativeFeedback,
+  View,
+} from 'react-native';
+import { ActivityIndicator, Text } from 'react-native-paper';
+import { getFullName } from '../full-name';
+import { useAppState } from '../state';
+import { ViewState } from '../types';
+import StudentInfo from './student-info';
+import { group } from 'group-items';
 
-export default function Students() {
+const Stack = createNativeStackNavigator();
+
+export default function StudentTab() {
+  const state = useAppState();
+
   return (
-    <View>
-      <Text>Students</Text>
-    </View>
+    <Stack.Navigator>
+      <Stack.Screen
+        name="StudentList"
+        component={Students}
+        options={{ headerTitle: 'Students' }}
+      />
+
+      <Stack.Screen
+        name="StudentInfo"
+        component={StudentInfo}
+        options={({ route }) => ({
+          title: getFullName(state.students[(route.params as any)!.studentId]),
+        })}
+      />
+    </Stack.Navigator>
+  );
+}
+
+export function Students({ route, navigation }) {
+  const [viewState, setViewState] = useState<ViewState>('loading');
+  const state = useAppState();
+  const students = state?.studentList;
+
+  useEffect(() => {
+    (async () => {
+      await state.fetchStudents();
+      setViewState('success');
+    })();
+  }, []);
+
+  const byLevels = group(students).by('level').asObject();
+
+  return (
+    <>
+      <StatusBar />
+      <ScrollView
+        style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      >
+        {viewState === 'loading' ? (
+          <ActivityIndicator animating={true} />
+        ) : students.length ? (
+          <>
+            {Object.keys(byLevels)
+              .sort()
+              .map((key) => {
+                const levelStudents = byLevels[key];
+                return (
+                  <Fragment key={key}>
+                    <Text variant="titleMedium" style={{ margin: 16 }}>
+                      {key} level
+                    </Text>
+                    {levelStudents?.map((student) => {
+                      return (
+                        <TouchableNativeFeedback
+                          key={student.id}
+                          onPress={() => {
+                            navigation.navigate('StudentInfo', {
+                              studentId: student.id,
+                            });
+                          }}
+                        >
+                          <View
+                            style={{
+                              padding: 16,
+                              display: 'flex',
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Text>{getFullName(student)}</Text>
+                          </View>
+                        </TouchableNativeFeedback>
+                      );
+                    })}
+                  </Fragment>
+                );
+              })}
+          </>
+        ) : (
+          <View
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ margin: 16, textAlign: 'center' }}>No students</Text>
+          </View>
+        )}
+      </ScrollView>
+    </>
   );
 }

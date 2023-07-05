@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TouchableNativeFeedback, View } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../../env';
@@ -6,6 +6,7 @@ import { ViewState } from '../types';
 import { useAppState } from '../state';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { getFullName } from '../full-name';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function LecturerInfo({ route, navigation }) {
   const { lecturerId } = route.params;
@@ -15,13 +16,15 @@ export default function LecturerInfo({ route, navigation }) {
   console.log(`lecturerId ${lecturerId}`);
   const lecturer = state?.lecturers[lecturerId];
 
-  useEffect(() => {
+  useFocusEffect(() =>
     // fetch lecturer info
-    (async () => {
-      await state.fetchLecturerInfo(lecturerId);
-      setViewState('success');
-    })();
-  }, []);
+    useCallback(() => {
+      (async () => {
+        await state.fetchLecturerInfo(lecturerId);
+        setViewState('success');
+      })();
+    }, [])
+  );
 
   return (
     <View>

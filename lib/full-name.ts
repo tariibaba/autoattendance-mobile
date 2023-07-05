@@ -3,7 +3,7 @@ export function getFullName(person: {
   lastName?: string;
   otherNames?: string;
 }) {
-  const { firstName, lastName, otherNames } = person;
+  const { firstName, lastName, otherNames } = person ?? {};
 
   return `${lastName}, ${firstName} ${otherNames ?? ''}`.trim();
 }

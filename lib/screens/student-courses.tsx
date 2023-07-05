@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TouchableNativeFeedback } from 'react-native';
 import { View, StatusBar } from 'react-native';
 import { Text, List, ActivityIndicator, Chip } from 'react-native-paper';
@@ -15,61 +15,24 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
 
-export type CoursesTabParamList = {
-  Courses: undefined;
-  CourseInfo: { courseId: string };
-  CreateCourse: { courseId?: string; mode: 'create' | 'update' };
-  ClassInfo: { classId: string; classIndex: number };
-  BarcodeScan: { classId: string };
-  PercentageReport: { courseId: string };
-};
-
-export default function CourseTab() {
+export default function StudentCoursesTab() {
   const state = useAppState();
 
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="CourseList"
+        name="StudentCourseList"
         component={Courses}
         options={{ headerTitle: 'Courses' }}
       />
 
       <Stack.Screen
-        name="CourseInfo"
+        name="StudentCourseInfo"
         component={CourseInfo}
         options={({ route }) => ({
           title: state.courses[(route.params as any)!.courseId].code,
         })}
       />
-      <Stack.Screen
-        name="CourseClasses"
-        component={CourseClasses}
-        options={({ route }) => ({
-          title: `${
-            state.courses[(route.params as any)!.courseId].code
-          } classes`,
-        })}
-      />
-      <Stack.Screen
-        name="CourseStudents"
-        component={CourseStudents}
-        options={({ route }) => ({
-          title: `${
-            state.courses[(route.params as any)!.courseId].code
-          } students`,
-        })}
-      />
-      <Stack.Screen
-        name="ClassInfo"
-        component={ClassInfo}
-        options={{
-          headerTitle: 'Class',
-          headerBackVisible: true,
-          headerShadowVisible: false,
-        }}
-      />
-      <Stack.Screen name="BarcodeScan" component={BarcodeScan} />
     </Stack.Navigator>
   );
 }
@@ -79,14 +42,12 @@ export function Courses({ route, navigation }) {
   const state = useAppState();
   const courses = state?.courseList;
 
-  useFocusEffect(
-    useCallback(() => {
-      (async () => {
-        await state.fetchCourses();
-        setViewState('success');
-      })();
-    }, [])
-  );
+  useFocusEffect(() => {
+    (async () => {
+      await state.fetchCourses();
+      setViewState('success');
+    })();
+  });
 
   return (
     <View>

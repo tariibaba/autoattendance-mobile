@@ -10,6 +10,7 @@ export type Student = {
   matricNo?: string;
   level?: string;
   courseIds?: string[];
+  attendanceRate?: { courseId: string; attendanceRate: number }[];
 };
 
 export type Lecturer = {

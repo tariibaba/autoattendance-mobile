@@ -15,6 +15,7 @@ const ClassInfo = observer(({ route, navigation }) => {
   const state = useAppState();
   const classId = route.params.classId;
   const classIndex = route.params.classIndex;
+  const { userRole } = state.userSession!;
 
   const courseClass = state.classes[classId];
   const course = state.courses[courseClass.courseId!];
@@ -81,11 +82,9 @@ const ClassInfo = observer(({ route, navigation }) => {
 
   return (
     <View style={{ height: '100%' }}>
-      <View style={{ margin: 16, flex: 1 }}>
+      <View style={{ margin: 16, height: '100%', display: 'flex' }}>
         <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 20 }}>
-            {course.code} Class #{classId}
-          </Text>
+          <Text style={{ fontSize: 20 }}>{course.code} Class</Text>
         </View>
         <View style={{ flexDirection: 'row', marginTop: 16 }}>
           <Text style={{ color: 'grey', fontSize: 16 }}>Date: </Text>
@@ -127,6 +126,7 @@ const ClassInfo = observer(({ route, navigation }) => {
                 >
                   <Text style={{ fontSize: 16 }}>{getFullName(student)}</Text>
                   <Checkbox
+                    disabled={userRole !== 'lecturer'}
                     status={present ? 'checked' : 'unchecked'}
                     onPress={() => {
                       present
@@ -141,13 +141,17 @@ const ClassInfo = observer(({ route, navigation }) => {
             <Text>No students in this course</Text>
           )}
         </ScrollView>
-        <Button
-          mode="contained"
-          style={{ marginTop: 'auto' }}
-          onPress={() => takeAttendance()}
-        >
-          Scan Barcodes
-        </Button>
+        {userRole === 'lecturer' ? (
+          <Button
+            mode="contained"
+            style={{ marginTop: 'auto', marginBottom: 32 }}
+            onPress={() => takeAttendance()}
+          >
+            Scan Barcodes
+          </Button>
+        ) : (
+          <></>
+        )}
       </View>
     </View>
   );
