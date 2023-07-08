@@ -85,6 +85,20 @@ export class AppState {
     });
   }
 
+  async fetchAdditionalClassInfo(classId?: string) {
+    const cClass = (
+      await axios.get(`${API_URL}/classes/${classId}`, {
+        headers: { Authorization: `Bearer ${this.userSession!.token}` },
+      })
+    ).data;
+    runInAction(() => {
+      this.classes[classId!] = {
+        ...this.classes[classId!],
+        presentIds: cClass.presentIds,
+      };
+    });
+  }
+
   async fetchLecturerInfo(lecturerId: string): Promise<void> {
     const url = `${API_URL}/lecturers/${lecturerId}`;
     const res = await axios.get(url, {
@@ -342,7 +356,7 @@ export class AppState {
         matricNo,
         courseIds,
         level,
-        attendanceRate,
+        attendance: attendanceRate,
       };
     });
     const student = this.students[studentId];

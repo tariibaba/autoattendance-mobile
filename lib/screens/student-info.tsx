@@ -48,9 +48,9 @@ export default function StudentInfo({ route, navigation }) {
             </Text>
             {courseIds?.map((courseId) => {
               const course = courses[courseId];
-              const attendanceRate = student?.attendanceRate?.find(
+              const attendanceRate = student?.attendance?.find(
                 (rate) => rate.courseId === courseId
-              )?.attendanceRate;
+              )?.rate;
               return (
                 <TouchableNativeFeedback>
                   <View

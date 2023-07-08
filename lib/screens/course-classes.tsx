@@ -19,6 +19,7 @@ export function CourseClasses({ route, navigation }) {
   useFocusEffect(
     useCallback(() => {
       (async () => {
+        setViewState('loading');
         await state.fetchCourseInfo(courseId);
         setViewState('success');
       })();

@@ -12,6 +12,7 @@ import BarcodeScan from './barcode-scan';
 import { CourseInfo } from './course-info';
 import { CourseStudents } from './course-students';
 import { useFocusEffect } from '@react-navigation/native';
+import ExamEligibilityScan from './exam-eligibility-scan';
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +60,10 @@ export default function CourseTab() {
             state.courses[(route.params as any)!.courseId].code
           } students`,
         })}
+      />
+      <Stack.Screen
+        name="ExamEligibilityScan"
+        component={ExamEligibilityScan}
       />
       <Stack.Screen
         name="ClassInfo"

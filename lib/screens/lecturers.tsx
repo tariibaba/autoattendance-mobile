@@ -32,6 +32,7 @@ export function Lecturers({ route, navigation }) {
   const [viewState, setViewState] = useState<ViewState>('loading');
   const state = useAppState();
   const lecturers = state?.lecturerList;
+  const userId = state.userSession!.userId;
 
   useFocusEffect(
     useCallback(() => {
@@ -70,7 +71,20 @@ export function Lecturers({ route, navigation }) {
                   alignItems: 'center',
                 }}
               >
-                <Text>{getFullName(lecturer)}</Text>
+                <View
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text>{getFullName(lecturer)}</Text>
+                  {lecturer.role === 'hod' ? (
+                    <Chip style={{ marginLeft: 8 }}>HOD</Chip>
+                  ) : (
+                    ''
+                  )}
+                </View>
                 <View>{courses}</View>
               </View>
             </TouchableNativeFeedback>

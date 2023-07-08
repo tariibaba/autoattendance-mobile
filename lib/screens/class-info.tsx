@@ -1,17 +1,20 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
 import { ViewState } from '../types';
-import { Alert, ScrollView, StyleProp, View } from 'react-native';
-import { Button, Checkbox, Text } from 'react-native-paper';
+import { Alert, ScrollView, StyleProp, View, ToastAndroid } from 'react-native';
+import { ActivityIndicator, Button, Checkbox, Text } from 'react-native-paper';
 // import { CoursesTabParamList } from './CoursesTab';
 import { format } from 'date-fns';
 import { getFullName } from '../full-name';
 import { useAppState } from '../state';
+import { useFocusEffect } from '@react-navigation/native';
 
 // type ClassInfoProps = NativeStackScreenProps<CoursesTabParamList, 'ClassInfo'>;
 
 const ClassInfo = observer(({ route, navigation }) => {
   const [viewState, setViewState] = useState<ViewState>('loading');
+  const [attendanceViewState, setAttendanceViewState] =
+    useState<ViewState>('loading');
   const state = useAppState();
   const classId = route.params.classId;
   const classIndex = route.params.classIndex;
@@ -33,6 +36,14 @@ const ClassInfo = observer(({ route, navigation }) => {
   useEffect(() => {
     navigation.setOptions({ title: 'Class Info' });
   }, [navigation]);
+
+  useEffect(() => {
+    (async () => {
+      setAttendanceViewState('loading');
+      await state.fetchAdditionalClassInfo(classId);
+      setAttendanceViewState('success');
+    })();
+  }, []);
 
   const markPresent = (studentId: string) => {
     const student = state.students[studentId];
@@ -110,7 +121,9 @@ const ClassInfo = observer(({ route, navigation }) => {
           <></>
         )}
         <ScrollView>
-          {allStudents?.length ? (
+          {attendanceViewState === 'loading' ? (
+            <ActivityIndicator animating={true} />
+          ) : allStudents?.length ? (
             allStudents?.map((student) => {
               const present = Boolean(
                 presentStudents?.find((value) => value.id === student.id)
@@ -146,6 +159,7 @@ const ClassInfo = observer(({ route, navigation }) => {
             mode="contained"
             style={{ marginTop: 'auto', marginBottom: 32 }}
             onPress={() => takeAttendance()}
+            disabled={attendanceViewState !== 'success'}
           >
             Scan Barcodes
           </Button>

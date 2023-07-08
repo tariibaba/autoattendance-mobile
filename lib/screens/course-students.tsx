@@ -63,7 +63,13 @@ export function CourseStudents({ route, navigation }) {
                       }}
                     >
                       <Text>{getFullName(student)}</Text>
-                      <Text>{attendanceRate * 100}%</Text>
+                      <Text
+                        style={{
+                          color: attendanceRate > 0.75 ? 'green' : 'red',
+                        }}
+                      >
+                        {attendanceRate * 100}%
+                      </Text>
                     </View>
                   </TouchableNativeFeedback>
                 );
@@ -75,7 +81,16 @@ export function CourseStudents({ route, navigation }) {
         </View>
       )}
       {userRole === 'lecturer' ? (
-        <Button style={{ margin: 32, marginBottom: 16 }} mode="contained">
+        <Button
+          disabled={viewState !== 'success'}
+          style={{ margin: 32, marginBottom: 16 }}
+          mode="contained"
+          onPress={() => {
+            navigation.navigate('ExamEligibilityScan', {
+              courseId,
+            });
+          }}
+        >
           Scan for exam eligibility
         </Button>
       ) : (

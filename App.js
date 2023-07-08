@@ -28,7 +28,7 @@ const Drawer = createDrawerNavigator();
 
 function UserInfo({ route, navigation }) {
   const state = useAppState();
-  const { userId, username, userRole, token } = state.userSession;
+  const { userId, username, userRole, token } = state.userSession ?? {};
   const [data, setData] = useState(null);
   useEffect(() => {
     if (!state.userSession) return;

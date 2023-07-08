@@ -10,7 +10,6 @@ import {
   Image,
   ToastAndroid,
 } from 'react-native';
-import crypto from 'react-native-crypto-js';
 import { useAppState } from '../state';
 import axios from 'axios';
 import { Avatar, Button, Dialog, Portal, Text } from 'react-native-paper';
@@ -21,22 +20,15 @@ import { getFullName } from '../full-name';
 // import { Image } from 'expo-image';
 import { SERVER_URL } from '../../env';
 
-export type BarcodeScanScreenProps = NativeStackScreenProps<
-  CoursesTabParamList,
-  'BarcodeScan'
->;
-
-const blurhash =
-  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
-
-const BarcodeScan = observer(({ route, navigation }) => {
+const ExamEligibilityScan = observer(({ route, navigation }) => {
   const state = useAppState();
   const { token } = state.userSession!;
-  const classId = route.params.classId;
+  const courseId = route.params.courseId;
   const [hasPermission, setHasPermission] = useState(false);
   const [scanned, setScanned] = useState(false);
-  const [presentDialogOpen, setPresentDialogOpen] = useState(false);
-  const [alreadyPresentDialogOpen, setAlreadyPresentDialogOpen] =
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const eligibleRef = useRef<boolean | undefined>(undefined);
+  const [unknownStudentDialogOpen, setUnknownStudentDialogOpen] =
     useState(false);
 
   useEffect(() => {
@@ -66,27 +58,18 @@ const BarcodeScan = observer(({ route, navigation }) => {
           headers: { Authorization: `Bearer ${token}` },
         })
       ).data;
-      const courseId = state.classes[classId].courseId!;
       const course = state.courses[courseId];
-      console.log(`attendance: ${JSON.stringify(student, null, 2)}`);
-      const isPresent = student.attendance
-        .find((attendance) => attendance.courseId === courseId)
-        ?.data.find((cClass) => cClass.classId === classId)?.present;
-      if (isPresent === true) {
+      eligibleRef.current =
+        studentRef.current.attendance.find(
+          (attendance) => attendance.courseId == courseId
+        ).attendanceRate > 0.75;
+      if (course.studentIds!.includes(student.id)) {
         studentRef.current = student;
-        setAlreadyPresentDialogOpen(true);
+        setDialogOpen(true);
       } else {
-        if (course.studentIds!.includes(student.id)) {
-          studentRef.current = student;
-          setPresentDialogOpen(true);
-        }
+        setUnknownStudentDialogOpen(true);
       }
     } catch (err: any) {
-      const { student, error: errorCode } = err.response?.data ?? {};
-      if (errorCode === 'attendance-already-exists') {
-        studentRef.current = student;
-        setAlreadyPresentDialogOpen(true);
-      }
       console.error(`${err}`);
       return;
     }
@@ -107,7 +90,6 @@ const BarcodeScan = observer(({ route, navigation }) => {
 
   const student = studentRef.current;
   const newUrl = `${SERVER_URL}${student?.photoUrl?.replaceAll('\\', '/')}`;
-  console.log(`newPhotoUrl: ${newUrl}`);
   return (
     <>
       <View style={{ height: '100%' }}>
@@ -122,8 +104,8 @@ const BarcodeScan = observer(({ route, navigation }) => {
         )}
       </View>
       <Portal>
-        <Dialog visible={presentDialogOpen}>
-          <Dialog.Title>Mark student present?</Dialog.Title>
+        <Dialog visible={unknownStudentDialogOpen}>
+          <Dialog.Title>Student not registered</Dialog.Title>
           <Dialog.Content style={{ width: '100%' }}>
             <Text>{getFullName(student)}</Text>
             <Text>{student?.matricNo}</Text>
@@ -148,28 +130,19 @@ const BarcodeScan = observer(({ route, navigation }) => {
             </View>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button
-              onPress={async () => {
-                setPresentDialogOpen(false);
-                await state.markPresent({
-                  classId,
-                  studentId: student?.id,
-                });
-                ToastAndroid.show(
-                  `${getFullName(studentRef.current)} marked present`,
-                  ToastAndroid.SHORT
-                );
-              }}
-            >
-              Mark present
+            <Button onPress={() => setUnknownStudentDialogOpen(false)}>
+              Close
             </Button>
-            <Button onPress={() => setPresentDialogOpen(false)}>Cancel</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
       <Portal>
-        <Dialog visible={alreadyPresentDialogOpen}>
-          <Dialog.Title>Student already present</Dialog.Title>
+        <Dialog visible={dialogOpen}>
+          <Dialog.Title
+            style={{ color: eligibleRef.current ? 'green' : 'red' }}
+          >
+            {eligibleRef.current ? 'Eligible' : 'Not eligible'}
+          </Dialog.Title>
           <Dialog.Content>
             <Text>{getFullName(student)}</Text>
             <Text>{student?.matricNo}</Text>
@@ -185,7 +158,12 @@ const BarcodeScan = observer(({ route, navigation }) => {
             >
               {newUrl ? (
                 <Image
-                  style={{ width: 200, height: 200 }}
+                  style={{
+                    width: 200,
+                    height: 200,
+                    borderColor: eligibleRef.current ? 'green' : 'red',
+                    borderWidth: 2,
+                  }}
                   source={{ uri: newUrl }}
                 />
               ) : (
@@ -196,7 +174,7 @@ const BarcodeScan = observer(({ route, navigation }) => {
           <Dialog.Actions>
             <Button
               onPress={() => {
-                setAlreadyPresentDialogOpen(false);
+                setDialogOpen(false);
               }}
             >
               Close
@@ -208,4 +186,4 @@ const BarcodeScan = observer(({ route, navigation }) => {
   );
 });
 
-export default BarcodeScan;
+export default ExamEligibilityScan;
