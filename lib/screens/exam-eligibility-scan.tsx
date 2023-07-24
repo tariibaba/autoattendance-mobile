@@ -91,6 +91,9 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
 
   const student = studentRef.current;
   const newUrl = `${SERVER_URL}${student?.photoUrl?.replaceAll('\\', '/')}`;
+  const rate = student?.attendance.find(
+    (attendance) => attendance.courseId == courseId
+  ).rate;
   return (
     <>
       <View style={{ height: '100%' }}>
@@ -139,10 +142,8 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
       </Portal>
       <Portal>
         <Dialog visible={dialogOpen}>
-          <Dialog.Title
-            style={{ color: eligibleRef.current ? 'green' : 'red' }}
-          >
-            {eligibleRef.current ? 'Eligible' : 'Not eligible'}
+          <Dialog.Title style={{ color: rate > 0.75 ? 'green' : 'red' }}>
+            {rate > 0.75 ? 'Eligible' : 'Not eligible'}
           </Dialog.Title>
           <Dialog.Content>
             <Text>{getFullName(student)}</Text>
@@ -150,20 +151,10 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
             <Text>{student?.level} level</Text>
             <Text
               style={{
-                color:
-                  student?.attendance.find(
-                    (attendance) => attendance.courseId == courseId
-                  ).rate > 0.75
-                    ? 'green'
-                    : 'red',
+                color: rate > 0.75 ? 'green' : 'red',
               }}
             >
-              Attendance:{' '}
-              {getFriendlyPercentage(
-                student?.attendance.find(
-                  (attendance) => attendance.courseId == courseId
-                ).rate
-              )}
+              Attendance: {getFriendlyPercentage(rate)}
             </Text>
             <View
               style={{
@@ -179,7 +170,7 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
                   style={{
                     width: 200,
                     height: 200,
-                    borderColor: eligibleRef.current ? 'green' : 'red',
+                    borderColor: rate > 0.75 ? 'green' : 'red',
                     borderWidth: 2,
                   }}
                   source={{ uri: newUrl }}

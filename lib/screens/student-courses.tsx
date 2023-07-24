@@ -1,10 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, TouchableNativeFeedback } from 'react-native';
 import { View, StatusBar } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
+import { Text, List, ActivityIndicator, Chip } from 'react-native-paper';
+import { getFullName } from '../full-name';
 import { useAppState } from '../state';
 import { Student, ViewState } from '../types';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import CourseClasses from './course-classes';
+import ClassInfo from './class-info';
+import BarcodeScan from './barcode-scan';
+import { CourseInfo } from './course-info';
+import { CourseStudents } from './course-students';
 import { useFocusEffect } from '@react-navigation/native';
 import { getFriendlyPercentage } from '../friendly-percentage';
 import { StudentCourseInfo } from './student-course-info';
@@ -67,6 +73,9 @@ export function Courses({ route, navigation }) {
           {courses
             ?.sort((a, b) => b.attendanceRate! - a.attendanceRate!)
             .map((course) => {
+              const rate = studentRef.current?.attendance?.find(
+                (c) => c.courseId === course.id
+              )?.rate!;
               return (
                 <TouchableNativeFeedback
                   key={course.id}
@@ -90,12 +99,8 @@ export function Courses({ route, navigation }) {
                     <Text>
                       {course.title} ({course.code})
                     </Text>
-                    <Text>
-                      {getFriendlyPercentage(
-                        studentRef.current?.attendance?.find(
-                          (c) => c.courseId === course.id
-                        )?.rate
-                      )}
+                    <Text style={{ color: rate > 0.75 ? 'green' : 'red' }}>
+                      {getFriendlyPercentage(rate)}
                     </Text>
                   </View>
                 </TouchableNativeFeedback>

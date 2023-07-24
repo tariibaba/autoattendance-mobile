@@ -139,9 +139,8 @@ export function CourseClasses({ route, navigation }) {
               }}
               onPressIn={(event) => {
                 console.log('onPressIn');
-                // TODO: Allow normal time pick
-                // event.preventDefault();
-                // setShowDatePicker(true);
+                event.preventDefault();
+                setShowDatePicker(true);
               }}
               value={`${
                 !date ? 'Date (dd/MM/yyyy)' : `${format(date, 'dd/MM/yyyy')}`
@@ -149,6 +148,11 @@ export function CourseClasses({ route, navigation }) {
             />
             <TextInput
               style={{ marginTop: 8 }}
+              onPressIn={(event) => {
+                console.log('onPressIn');
+                event.preventDefault();
+                setShowTimePicker(true);
+              }}
               value={`${
                 !time
                   ? 'Time (HH:mm)'
