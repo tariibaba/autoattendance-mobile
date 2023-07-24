@@ -388,10 +388,10 @@ export class AppState {
 
   async createClass(params: {
     courseId: string;
+    date: Date;
   }): Promise<CourseClass | undefined> {
-    const { courseId } = params;
+    const { courseId, date } = params;
     const token = this.userSession!.token;
-    const date = new Date();
     const { id } = (
       await axios.post(
         `${API_URL}/classes`,
@@ -414,6 +414,26 @@ export class AppState {
       this.classes[id] = courseClass;
     });
     return courseClass;
+  }
+
+  async deleteClass(params: { classId: string }) {
+    const { classId } = params;
+    console.log(`classId: ${classId}`);
+    const token = this.userSession!.token;
+    await axios.delete(`${API_URL}/classes/${classId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    runInAction(() => {
+      const courseClass = this.classes[classId];
+      console.log(`courseClass: ${courseClass}`);
+      const courseId = courseClass.courseId!;
+      this.courses[courseId].classIds = this.courses[courseId].classIds!.filter(
+        (id) => id !== classId
+      );
+      this.classIds = this.classIds.filter((id) => id !== classId);
+      delete this.classes[classId];
+      console.log("i'm here");
+    });
   }
 
   async markPresent(attendance: { classId: string; studentId: string }) {

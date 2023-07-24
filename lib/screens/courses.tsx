@@ -68,11 +68,14 @@ export default function CourseTab() {
       <Stack.Screen
         name="ClassInfo"
         component={ClassInfo}
-        options={{
-          headerTitle: 'Class',
-          headerBackVisible: true,
-          headerShadowVisible: false,
-        }}
+        options={({ route }) => ({
+          headerTitle: `${
+            state.courses[
+              state.classes[(route.params as any)!.classId].courseId!
+            ].code
+          } Class`,
+
+        })}
       />
       <Stack.Screen name="BarcodeScan" component={BarcodeScan} />
     </Stack.Navigator>
