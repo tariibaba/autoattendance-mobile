@@ -102,33 +102,35 @@ export function Courses({ route, navigation }) {
       {viewState === 'loading' ? (
         <ActivityIndicator animating={true} />
       ) : (
-        courses?.map((course) => {
-          return (
-            <TouchableNativeFeedback
-              key={course.id}
-              onPress={() => {
-                navigation.navigate('CourseInfo', {
-                  courseId: course.id,
-                });
-              }}
-            >
-              <View
-                style={{
-                  padding: 16,
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+        courses
+          ?.sort((a, b) => b.attendanceRate! - a.attendanceRate!)
+          .map((course) => {
+            return (
+              <TouchableNativeFeedback
+                key={course.id}
+                onPress={() => {
+                  navigation.navigate('CourseInfo', {
+                    courseId: course.id,
+                  });
                 }}
               >
-                <Text>
-                  {course.title} ({course.code})
-                </Text>
-                <Text>{(course.attendanceRate! * 100).toFixed(0)}%</Text>
-              </View>
-            </TouchableNativeFeedback>
-          );
-        })
+                <View
+                  style={{
+                    padding: 16,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text>
+                    {course.title} ({course.code})
+                  </Text>
+                  <Text>{(course.attendanceRate! * 100).toFixed(0)}%</Text>
+                </View>
+              </TouchableNativeFeedback>
+            );
+          })
       )}
     </View>
   );

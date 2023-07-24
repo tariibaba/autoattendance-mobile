@@ -17,6 +17,7 @@ import format from 'date-fns/format';
 import { useFocusEffect } from '@react-navigation/native';
 import { universalDateFormat } from '../universal-date-format';
 import { getFullName } from '../full-name';
+import { getFriendlyPercentage } from '../friendly-percentage';
 
 export function StudentCourseInfo({ route, navigation }) {
   const { courseId, studentId } = route.params;
@@ -28,13 +29,21 @@ export function StudentCourseInfo({ route, navigation }) {
   const course = state?.courses[courseId];
 
   useEffect(() => {
-    navigation?.setOptions({ title: `${student.lastName} in ${course.code}` });
+    navigation?.setOptions({
+      title: `${role === 'student' ? 'You' : student.lastName} in ${
+        course.code
+      }`,
+    });
   }, [navigation]);
 
   useFocusEffect(
     useCallback(() => {
       (async () => {
-        await state.fetchCourseInfo(courseId);
+        console.log(`courseId: ${courseId}`);
+        await Promise.all([
+          state.fetchCourseInfo(courseId),
+          state.fetchStudentInfo(studentId),
+        ]);
         setViewState('success');
       })();
     }, [])
@@ -105,11 +114,23 @@ export function StudentCourseInfo({ route, navigation }) {
         <ActivityIndicator animating={true} />
       ) : (
         <View>
+          {role !== 'student' && (
+            <Text
+              style={{ textAlign: 'center', marginTop: 16 }}
+              variant="headlineSmall"
+            >
+              {getFullName(student)}
+            </Text>
+          )}
           <Text
-            style={{ textAlign: 'center', marginTop: 16 }}
-            variant="headlineSmall"
+            style={{
+              fontSize: 18,
+              marginTop: 16,
+              marginHorizontal: 16,
+              color: studentData.rate > 0.75 ? 'green' : 'red',
+            }}
           >
-            {getFullName(student)}
+            Attendance: {getFriendlyPercentage(studentData.rate)}
           </Text>
           <Text
             variant="labelLarge"
@@ -119,7 +140,7 @@ export function StudentCourseInfo({ route, navigation }) {
           </Text>
           {course?.classIds?.length ? (
             <>
-              {studentData.data
+              {studentData?.data
                 .sort(
                   (a, b) =>
                     state.classes[b.classId]!.date!.getTime() -

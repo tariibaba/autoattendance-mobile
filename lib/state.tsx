@@ -151,6 +151,7 @@ export class AppState {
 
   async fetchCourseInfo(courseId: string): Promise<void> {
     const url = `${API_URL}/courses/${courseId}`;
+    const userRole = this.userSession?.userRole;
     const data = (
       await axios.get(url, {
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
@@ -168,29 +169,35 @@ export class AppState {
     let classes;
     console.log(`classIds.length: ${data.classIds.length}`);
     if (data.classIds.length > 0) {
+      console.log('fetching classes');
       classes = (
         await axios.get(`${API_URL}/classes?courseId=${courseId}`, {
           headers: { Authorization: `Bearer ${this.userSession!.token}` },
         })
       ).data;
+      console.log('got classes');
     }
 
     let studentsRes;
+
     if (data.studentIds.length > 0) {
       console.log(`studentIds: ${data.studentIds}`);
       const studentUrl = `${API_URL}/students?courseId=${courseId}`;
       studentsRes = await axios.get(studentUrl, {
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
       });
+      console.log('got students');
     }
 
     let lecturer;
-    if (data.lecturerId) {
-      lecturer = (
-        await axios.get(`${API_URL}/lecturers/${data.lecturerId}`, {
-          headers: { Authorization: `Bearer ${this.userSession!.token}` },
-        })
-      ).data;
+    if (userRole !== 'student') {
+      if (data.lecturerId) {
+        lecturer = (
+          await axios.get(`${API_URL}/lecturers/${data.lecturerId}`, {
+            headers: { Authorization: `Bearer ${this.userSession!.token}` },
+          })
+        ).data;
+      }
     }
 
     runInAction(() => {
@@ -218,10 +225,13 @@ export class AppState {
           this.students[id] = { ...this.students[id], ...student };
         }
       }
-      if (data.lecturerId) {
-        if (!this.lecturerIds.includes(lecturer.id)) {
-          this.lecturerIds.push(lecturer.id);
-          this.lecturers[lecturer.id] = { ...lecturer };
+
+      if (userRole !== 'student') {
+        if (data.lecturerId) {
+          if (!this.lecturerIds.includes(lecturer.id)) {
+            this.lecturerIds.push(lecturer.id);
+            this.lecturers[lecturer.id] = { ...lecturer };
+          }
         }
       }
     });
@@ -388,6 +398,9 @@ export class AppState {
             id: course.id,
             title: course.title,
             code: course.code,
+            attendanceRate: course.attendanceRate,
+            attendanceRateByStudent: course.attendanceRateByStudent,
+            lecturerId: course.lecturerId,
           };
         }
       });

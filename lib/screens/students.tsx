@@ -76,35 +76,37 @@ export function Students({ route, navigation }) {
                     <Text variant="titleMedium" style={{ margin: 16 }}>
                       {key} level
                     </Text>
-                    {levelStudents?.map((student) => {
-                      return (
-                        <TouchableNativeFeedback
-                          key={student.id}
-                          onPress={() => {
-                            navigation.navigate('StudentInfo', {
-                              studentId: student.id,
-                            });
-                          }}
-                        >
-                          <View
-                            style={{
-                              padding: 16,
-                              display: 'flex',
-                              flexDirection: 'row',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
+                    {levelStudents
+                      ?.sort((a, b) => b.attendanceRate! - a.attendanceRate!)
+                      .map((student) => {
+                        return (
+                          <TouchableNativeFeedback
+                            key={student.id}
+                            onPress={() => {
+                              navigation.navigate('StudentInfo', {
+                                studentId: student.id,
+                              });
                             }}
                           >
-                            <Text>
-                              {getFullName(student)} ({student.matricNo})
-                            </Text>
-                            <Text>
-                              {getFriendlyPercentage(student.attendanceRate)}
-                            </Text>
-                          </View>
-                        </TouchableNativeFeedback>
-                      );
-                    })}
+                            <View
+                              style={{
+                                padding: 16,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Text>
+                                {getFullName(student)} ({student.matricNo})
+                              </Text>
+                              <Text>
+                                {getFriendlyPercentage(student.attendanceRate)}
+                              </Text>
+                            </View>
+                          </TouchableNativeFeedback>
+                        );
+                      })}
                   </Fragment>
                 );
               })}

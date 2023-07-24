@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { getFullName } from '../full-name';
 import { useAppState } from '../state';
 import { useFocusEffect } from '@react-navigation/native';
+import { universalDateFormat } from '../universal-date-format';
 
 // type ClassInfoProps = NativeStackScreenProps<CoursesTabParamList, 'ClassInfo'>;
 
@@ -120,7 +121,7 @@ const ClassInfo = observer(({ route, navigation }) => {
         {cClass ? (
           <View style={{ flexDirection: 'row', marginTop: 16 }}>
             <Text style={{ fontSize: 16 }}>
-              {format(cClass.date!, 'MMM dd yyyy  h:mm a')}
+              {universalDateFormat(cClass.date!)}
             </Text>
           </View>
         ) : (
@@ -149,7 +150,7 @@ const ClassInfo = observer(({ route, navigation }) => {
           ) : allStudents?.length ? (
             allStudents?.map((student) => {
               const present = Boolean(
-                presentStudents?.find((value) => value.id === student.id)
+                state.classes[classId].presentIds?.includes(student.id)
               );
               return (
                 <View

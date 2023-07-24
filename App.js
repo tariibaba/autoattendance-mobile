@@ -20,6 +20,7 @@ import { deleteUserSession } from './lib/auth';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import StudentCoursesTab from './lib/screens/student-courses';
+import { getFriendlyPercentage } from './lib/friendly-percentage';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +59,11 @@ function UserInfo({ route, navigation }) {
           ? 'Head of Department'
           : 'Student'}
       </Text>
+      {userRole === 'student' && (
+        <Text variant="bodyLarge">
+          Attendance: {getFriendlyPercentage(data?.attendanceRate)}
+        </Text>
+      )}
       <Button
         style={{ marginTop: 'auto' }}
         onPress={async () => {
@@ -79,7 +85,7 @@ function AppDrawer() {
         component={Home}
         options={{ title: 'Home', headerShadowVisible: false }}
       />
-      <Drawer.Screen name="User info" component={UserInfo} />
+      <Drawer.Screen name="Your info" component={UserInfo} />
     </Drawer.Navigator>
   );
 }
