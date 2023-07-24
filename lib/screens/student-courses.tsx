@@ -41,10 +41,12 @@ export function Courses({ route, navigation }) {
   const [viewState, setViewState] = useState<ViewState>('loading');
   const state = useAppState();
   const courses = state?.courseList;
+  const session = state.userSession;
+  const userId = session?.userId!;
 
   useFocusEffect(() => {
     (async () => {
-      await state.fetchCourses();
+      await state.fetchStudentInfo(userId);
       setViewState('success');
     })();
   });

@@ -15,6 +15,7 @@ export type Student = {
     rate: number;
     data: { classId: string; present: boolean }[];
   }[];
+  attendanceRate?: number;
 };
 
 export type Lecturer = {

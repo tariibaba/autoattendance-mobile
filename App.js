@@ -19,6 +19,7 @@ import { getFullName } from './lib/full-name';
 import { deleteUserSession } from './lib/auth';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import StudentCoursesTab from './lib/screens/student-courses';
 
 const Stack = createNativeStackNavigator();
 
@@ -132,7 +133,7 @@ function Home() {
           <>
             <Tab.Screen
               name="Student.Courses"
-              component={CoursesTab}
+              component={StudentCoursesTab}
               options={{ title: 'Courses' }}
             />
           </>

@@ -1,5 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   ScrollView,
   StatusBar,
@@ -12,6 +12,9 @@ import { useAppState } from '../state';
 import { ViewState } from '../types';
 import StudentInfo from './student-info';
 import { group } from 'group-items';
+import { getFriendlyPercentage } from '../friendly-percentage';
+import { StudentCourseInfo } from './student-course-info';
+import { useFocusEffect } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +36,7 @@ export default function StudentTab() {
           title: getFullName(state.students[(route.params as any)!.studentId]),
         })}
       />
+      <Stack.Screen name="StudentCourseInfo" component={StudentCourseInfo} />
     </Stack.Navigator>
   );
 }
@@ -42,12 +46,14 @@ export function Students({ route, navigation }) {
   const state = useAppState();
   const students = state?.studentList;
 
-  useEffect(() => {
-    (async () => {
-      await state.fetchStudents();
-      setViewState('success');
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        await state.fetchStudents();
+        setViewState('success');
+      })();
+    }, [])
+  );
 
   const byLevels = group(students).by('level').asObject();
 
@@ -89,7 +95,12 @@ export function Students({ route, navigation }) {
                               alignItems: 'center',
                             }}
                           >
-                            <Text>{getFullName(student)}</Text>
+                            <Text>
+                              {getFullName(student)} ({student.matricNo})
+                            </Text>
+                            <Text>
+                              {getFriendlyPercentage(student.attendanceRate)}
+                            </Text>
                           </View>
                         </TouchableNativeFeedback>
                       );

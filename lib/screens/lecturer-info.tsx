@@ -44,6 +44,18 @@ export default function LecturerInfo({ route, navigation }) {
               <Text variant="titleMedium" style={{ textAlign: 'center' }}>
                 Courses
               </Text>
+              <View
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginLeft: 16,
+                  marginRight: 16,
+                }}
+              >
+                <Text variant="labelLarge">Code</Text>
+                <Text variant="labelLarge">Percentage</Text>
+              </View>
               {lecturer?.courseIds?.map((courseId) => {
                 const course = state.courses[courseId];
                 return (

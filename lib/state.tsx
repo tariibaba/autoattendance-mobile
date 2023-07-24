@@ -29,6 +29,12 @@ export class AppState {
   classIds: string[] = [];
   classes: Record<string, CourseClass> = {};
 
+  get classList() {
+    return this.classIds
+      .map((id) => this.classes[id])
+      .sort((a, b) => b!.date?.getTime()! - a!.date?.getTime()!);
+  }
+
   get lecturerList() {
     return this.lecturerIds.map((id) => this.lecturers[id]);
   }
@@ -160,6 +166,7 @@ export class AppState {
     });
 
     let classes;
+    console.log(`classIds.length: ${data.classIds.length}`);
     if (data.classIds.length > 0) {
       classes = (
         await axios.get(`${API_URL}/classes?courseId=${courseId}`, {
@@ -270,8 +277,6 @@ export class AppState {
         headers: { Authorization: `Bearer ${this.userSession!.token}` },
       })
     ).data;
-    console.log('students...');
-    console.log(JSON.stringify(students));
     runInAction(() => {
       this.studentIds = [];
       this.students = {};
@@ -345,8 +350,10 @@ export class AppState {
       matricNo,
       courseIds,
       level,
+      attendance,
       attendanceRate,
     } = data;
+    console.log(`data: ${JSON.stringify(data, null, 2)}`);
     runInAction(() => {
       this.students[studentId] = {
         id: studentId,
@@ -356,7 +363,8 @@ export class AppState {
         matricNo,
         courseIds,
         level,
-        attendance: attendanceRate,
+        attendance,
+        attendanceRate,
       };
     });
     const student = this.students[studentId];
@@ -439,14 +447,23 @@ export class AppState {
   async markPresent(attendance: { classId: string; studentId: string }) {
     const { classId, studentId } = attendance;
     const url = `${API_URL}/classes/${classId}/attendances`;
-    await axios.post(
-      url,
-      { studentId },
-      { headers: { Authorization: `Bearer ${this.userSession!.token}` } }
-    );
-    runInAction(() => {
-      this.classes[classId].presentIds!.push(studentId);
-    });
+    try {
+      await axios.post(
+        url,
+        { studentId },
+        { headers: { Authorization: `Bearer ${this.userSession!.token}` } }
+      );
+      runInAction(() => {
+        this.classes[classId].presentIds!.push(studentId);
+      });
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  markPresentLocal(attendance: { classId: string; studentId: string }) {
+    const { classId, studentId } = attendance;
+    this.classes[classId].presentIds!.push(studentId);
   }
 
   async markAbsent(attendance: { classId: string; studentId: string }) {
@@ -476,8 +493,6 @@ export class AppState {
         this.lecturers[lecturer.id] = { ...lecturer };
       }
     });
-
-    console.log(`lecturerList: ${JSON.stringify(this.lecturerList, null, 2)}`);
   }
 
   get isAdmin(): boolean {

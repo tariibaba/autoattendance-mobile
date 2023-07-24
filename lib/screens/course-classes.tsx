@@ -20,6 +20,7 @@ import {
   TimePicker,
   TimePickerModal,
 } from 'react-native-paper-dates';
+import { universalDateFormat } from '../universal-date-format';
 
 export function CourseClasses({ route, navigation }) {
   const { courseId } = route.params;
@@ -62,6 +63,7 @@ export function CourseClasses({ route, navigation }) {
     setShowDateTimePicker(false);
     date?.setHours(time!.hour);
     date?.setMinutes(time!.minute);
+    console.log(`createClass...`);
     await state.createClass({
       courseId,
       date: date!,
@@ -76,13 +78,12 @@ export function CourseClasses({ route, navigation }) {
         <View>
           {course?.classIds?.length ? (
             <>
-              {course?.classIds?.map((classId) => {
-                const courseClass = state.classes[classId];
+              {state.classList?.map((cClass) => {
                 return (
                   <TouchableNativeFeedback
                     onPress={() => {
                       navigation.navigate('ClassInfo', {
-                        classId: courseClass.id,
+                        classId: cClass.id,
                       });
                     }}
                   >
@@ -96,7 +97,7 @@ export function CourseClasses({ route, navigation }) {
                     >
                       <Text>
                         Class on&nbsp;
-                        {format(courseClass.date!, 'MMM dd yyyy  h:mm a')}
+                        {universalDateFormat(cClass.date!)}
                       </Text>
                     </View>
                   </TouchableNativeFeedback>
@@ -112,6 +113,7 @@ export function CourseClasses({ route, navigation }) {
         <FAB
           label="New class"
           icon="plus"
+          disabled={viewState !== 'success'}
           style={{ position: 'absolute', margin: 16, right: 0, bottom: 0 }}
           onPress={async () => {
             // await state.createClass({ courseId });
@@ -134,13 +136,16 @@ export function CourseClasses({ route, navigation }) {
               style={{ marginTop: 24 }}
               onFocus={(event) => {
                 console.log('on focus');
-                event.preventDefault();
-                setShowDatePicker(true);
               }}
               onPressIn={(event) => {
                 console.log('onPressIn');
+                // TODO: Allow normal time pick
+                // event.preventDefault();
+                // setShowDatePicker(true);
               }}
-              value={`${!date ? 'Date (DD/MM/yyyy)' : `${date.toISOString()}`}`}
+              value={`${
+                !date ? 'Date (dd/MM/yyyy)' : `${format(date, 'dd/MM/yyyy')}`
+              }`}
             />
             <TextInput
               style={{ marginTop: 8 }}
@@ -169,15 +174,23 @@ export function CourseClasses({ route, navigation }) {
                 setShowTimePicker(false);
               }}
             />
+          </View>
+          <Dialog.Actions>
+            <Button
+              onPress={() => {
+                setShowDateTimePicker(false);
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               mode="contained"
-              style={{ marginTop: 32 }}
               disabled={!time || !date}
               onPress={handleNewClass}
             >
               Create
             </Button>
-          </View>
+          </Dialog.Actions>
         </Dialog>
       </Portal>
     </View>

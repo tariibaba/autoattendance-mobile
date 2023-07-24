@@ -46,13 +46,32 @@ export default function StudentInfo({ route, navigation }) {
             >
               Courses
             </Text>
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginHorizontal: 16,
+                marginTop: 16,
+              }}
+            >
+              <Text>Course</Text>
+              <Text>Attendance</Text>
+            </View>
             {courseIds?.map((courseId) => {
               const course = courses[courseId];
               const attendanceRate = student?.attendance?.find(
                 (rate) => rate.courseId === courseId
               )?.rate;
               return (
-                <TouchableNativeFeedback>
+                <TouchableNativeFeedback
+                  onPress={() => {
+                    navigation.navigate('StudentCourseInfo', {
+                      courseId,
+                      studentId,
+                    });
+                  }}
+                >
                   <View
                     style={{
                       padding: 16,

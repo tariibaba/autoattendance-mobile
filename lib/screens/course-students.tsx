@@ -6,6 +6,7 @@ import { ActivityIndicator, Button, FAB, Text } from 'react-native-paper';
 import { observer } from 'mobx-react-lite';
 import { getFullName } from '../full-name';
 import { useFocusEffect } from '@react-navigation/native';
+import { getFriendlyPercentage } from '../friendly-percentage';
 
 export function CourseStudents({ route, navigation }) {
   const { courseId } = route.params;
@@ -47,9 +48,10 @@ export function CourseStudents({ route, navigation }) {
                   <TouchableNativeFeedback
                     onPress={() => {
                       navigation.navigate('Students', {
-                        screen: 'StudentInfo',
+                        screen: 'StudentCourseInfo',
                         params: {
-                          classId: student.id,
+                          studentId: student.id,
+                          courseId: course.id,
                         },
                       });
                     }}
@@ -68,7 +70,7 @@ export function CourseStudents({ route, navigation }) {
                           color: attendanceRate > 0.75 ? 'green' : 'red',
                         }}
                       >
-                        {attendanceRate * 100}%
+                        {getFriendlyPercentage(attendanceRate)}
                       </Text>
                     </View>
                   </TouchableNativeFeedback>

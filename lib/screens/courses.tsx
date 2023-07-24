@@ -64,6 +64,7 @@ export default function CourseTab() {
       <Stack.Screen
         name="ExamEligibilityScan"
         component={ExamEligibilityScan}
+        options={{ title: 'Check Exam Eligibility' }}
       />
       <Stack.Screen
         name="ClassInfo"
@@ -74,7 +75,6 @@ export default function CourseTab() {
               state.classes[(route.params as any)!.classId].courseId!
             ].code
           } Class`,
-
         })}
       />
       <Stack.Screen name="BarcodeScan" component={BarcodeScan} />

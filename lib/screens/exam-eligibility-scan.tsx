@@ -19,6 +19,7 @@ import { API_URL } from '../../env';
 import { getFullName } from '../full-name';
 // import { Image } from 'expo-image';
 import { SERVER_URL } from '../../env';
+import { getFriendlyPercentage } from '../friendly-percentage';
 
 const ExamEligibilityScan = observer(({ route, navigation }) => {
   const state = useAppState();
@@ -42,7 +43,6 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
-    alert(`Bar code with type ${type} and data ${data} has been scanned!`);
     readQRCodeData(data);
   };
 
@@ -59,6 +59,8 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
         })
       ).data;
       const course = state.courses[courseId];
+      console.log(`student: ${JSON.stringify(student)}`);
+      studentRef.current = student;
       eligibleRef.current =
         studentRef.current.attendance.find(
           (attendance) => attendance.courseId == courseId
@@ -71,15 +73,14 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
       }
     } catch (err: any) {
       console.error(`${err}`);
+      const statusCode = err?.response?.status;
+      if (statusCode === 404) {
+        console.log('Student not found');
+        Alert.alert('Student not found', "We couldn't find this student");
+      }
       return;
     }
   };
-
-  useEffect(() => {
-    navigation.setOptions({
-      title: 'Scan Barcode',
-    });
-  }, [navigation]);
 
   if (hasPermission === null) {
     return <Text style={{ margin: 16 }}>Requesting for camera permission</Text>;
@@ -147,6 +148,23 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
             <Text>{getFullName(student)}</Text>
             <Text>{student?.matricNo}</Text>
             <Text>{student?.level} level</Text>
+            <Text
+              style={{
+                color:
+                  student?.attendance.find(
+                    (attendance) => attendance.courseId == courseId
+                  ).rate > 0.75
+                    ? 'green'
+                    : 'red',
+              }}
+            >
+              Attendance:{' '}
+              {getFriendlyPercentage(
+                student?.attendance.find(
+                  (attendance) => attendance.courseId == courseId
+                ).rate
+              )}
+            </Text>
             <View
               style={{
                 display: 'flex',
