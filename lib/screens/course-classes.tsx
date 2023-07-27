@@ -86,6 +86,7 @@ export function CourseClasses({ route, navigation }) {
                         classId: cClass.id,
                       });
                     }}
+                    key={cClass.id}
                   >
                     <View
                       style={{
