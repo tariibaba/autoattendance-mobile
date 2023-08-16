@@ -39,7 +39,6 @@ export function StudentCourseInfo({ route, navigation }) {
   useFocusEffect(
     useCallback(() => {
       (async () => {
-        console.log(`courseId: ${courseId}`);
         await Promise.all([
           state.fetchCourseInfo(courseId),
           state.fetchStudentInfo(studentId),

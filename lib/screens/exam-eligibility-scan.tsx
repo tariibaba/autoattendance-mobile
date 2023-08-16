@@ -51,7 +51,6 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
   const readQRCodeData = async (data: string) => {
     try {
       const qrcodeData = data;
-      console.log(`sending data: ${qrcodeData}`);
       const qrcodeEncoded = encodeURIComponent(qrcodeData);
       const { ...student } = (
         await axios.get(`${API_URL}/students/${qrcodeEncoded}?qrcode=1`, {
@@ -59,7 +58,6 @@ const ExamEligibilityScan = observer(({ route, navigation }) => {
         })
       ).data;
       const course = state.courses[courseId];
-      console.log(`student: ${JSON.stringify(student)}`);
       studentRef.current = student;
       eligibleRef.current =
         studentRef.current.attendance.find(

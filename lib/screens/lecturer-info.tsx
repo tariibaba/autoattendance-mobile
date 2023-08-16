@@ -17,7 +17,6 @@ export default function LecturerInfo({ route, navigation }) {
   const lecturer = state?.lecturers[lecturerId];
 
   useFocusEffect(
-    // fetch lecturer info
     useCallback(() => {
       (async () => {
         await state.fetchLecturerInfo(lecturerId);
